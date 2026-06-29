@@ -160,25 +160,25 @@ rules = association_rules(
 )
 
 # تصفية: نريد فقط القواعد التي نتيجتها تتعلق بـ income
-rules_income = rules[
+rules_target = rules[
     rules['consequents'].apply(
         lambda x: any('income=' in item for item in x)
     )
 ].copy()
 
 # تصفية إضافية بناءً على Lift
-rules_income = rules_income[rules_income['lift'] >= MIN_LIFT]
+rules_target = rules_target[rules_target['lift'] >= MIN_LIFT]
 
 # ترتيب حسب الثقة ثم الرفع
-rules_income = rules_income.sort_values(
+rules_target = rules_target.sort_values(
     ['confidence', 'lift'], ascending=False
 ).reset_index(drop=True)
 
 # تحويل frozensets إلى نصوص مقروءة
-rules_income['antecedents_str'] = rules_income['antecedents'].apply(
+rules_target['antecedents_str'] = rules_target['antecedents'].apply(
     lambda x: " AND ".join(sorted(list(x)))
 )
-rules_income['consequents_str'] = rules_income['consequents'].apply(
+rules_target['consequents_str'] = rules_target['consequents'].apply(
     lambda x: " AND ".join(sorted(list(x)))
 )
 
@@ -186,7 +186,7 @@ print("\n" + "=" * 60)
 print("قواعد الارتباط المرتبطة بالعمود الهدف (income)")
 print(f"(min_support={MIN_SUPPORT}, min_confidence={MIN_CONFIDENCE}, min_lift={MIN_LIFT})")
 print("=" * 60)
-print(f"عدد القواعد المستخرجة: {len(rules_income)}")
+print(f"عدد القواعد المستخرجة: {len(rules_target)}")
 
 # ============================================================
 # 8. عرض أهم النتائج | Display Top Results
@@ -195,7 +195,7 @@ print(f"عدد القواعد المستخرجة: {len(rules_income)}")
 display_cols = ['antecedents_str', 'consequents_str', 'support', 'confidence', 'lift']
 
 print("\n--- أعلى 15 قاعدة ارتباط ---")
-top_rules = rules_income[display_cols].head(15)
+top_rules = rules_target[display_cols].head(15)
 for i, row in top_rules.iterrows():
     print(f"\n[{i+1}] إذا: {row['antecedents_str']}")
     print(f"     إذن: {row['consequents_str']}")
@@ -205,12 +205,12 @@ for i, row in top_rules.iterrows():
 # 9. تقسيم النتائج حسب الهدف | Split by income
 # ============================================================
 
-rules_high = rules_income[
-    rules_income['consequents_str'].str.contains('>50K')
+rules_high = rules_target[
+    rules_target['consequents_str'].str.contains('>50K')
 ].head(10)
 
-rules_low = rules_income[
-    rules_income['consequents_str'].str.contains('<=50K')
+rules_low = rules_target[
+    rules_target['consequents_str'].str.contains('<=50K')
 ].head(10)
 
 print("\n" + "=" * 60)
@@ -232,7 +232,7 @@ for i, row in rules_low.iterrows():
 # ============================================================
 # 10. حفظ النتائج | Save Results
 # ============================================================
-rules_income[display_cols].to_csv("apriori_rules_output.csv", index=False, encoding='utf-8-sig')
+rules_target[display_cols].to_csv("apriori_rules_output.csv", index=False, encoding='utf-8-sig')
 frequent_itemsets[['support', 'itemsets_str']].to_csv("frequent_itemsets_output.csv", index=False, encoding='utf-8-sig')
 
 print("\n" + "=" * 60)
@@ -245,7 +245,7 @@ print("=" * 60)
 # 11. ملخص الإحصائيات | Summary Statistics
 # ============================================================
 print("\n--- ملخص إحصائيات القواعد ---")
-print(f"متوسط الثقة:  {rules_income['confidence'].mean():.3f}")
-print(f"أعلى ثقة:    {rules_income['confidence'].max():.3f}")
-print(f"متوسط الرفع: {rules_income['lift'].mean():.3f}")
-print(f"أعلى رفع:    {rules_income['lift'].max():.3f}")
+print(f"متوسط الثقة:  {rules_target['confidence'].mean():.3f}")
+print(f"أعلى ثقة:    {rules_target['confidence'].max():.3f}")
+print(f"متوسط الرفع: {rules_target['lift'].mean():.3f}")
+print(f"أعلى رفع:    {rules_target['lift'].max():.3f}")
