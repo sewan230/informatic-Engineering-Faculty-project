@@ -1,4 +1,4 @@
-from adultdata_preprocessed import (
+from dataPreProcessed import (
     X_train,
     X_test,
     y_train,
