@@ -44,7 +44,7 @@ print(f"\nحجم البيانات بعد التنظيف: {df.shape}")
 لذلك سنقوم بـ:
   أ. تحويل الأعمدة الرقمية إلى فئات (تقسيم إلى نطاقات)
   ب. دمج اسم العمود مع القيمة لتكوين "عنصر" واضح
-     مثال: "age=Young" أو "target=>50K"
+     مثال: "age=Young" أو "income=>50K"
 """
 
 # --- أ. تقسيم العمر إلى فئات | Bin Age ---
@@ -73,7 +73,7 @@ selected_cols = [
     'race',               # العرق
     'sex',                # الجنس
     'hours_group',        # ساعات العمل
-    'target'              # العمود الهدف (الدخل)
+    'income'              # العمود الهدف (الدخل)
 ]
 
 df_apriori = df[selected_cols].copy()
@@ -149,7 +149,7 @@ print(frequent_itemsets[['support', 'itemsets_str']].head(10).to_string(index=Fa
 association_rules تستخرج العلاقات بين العناصر بالشكل:
   إذا (antecedents) → إذن (consequents)
 
-نحن مهتمون بالقواعد التي تتنبأ بالعمود الهدف (target)
+نحن مهتمون بالقواعد التي تتنبأ بالعمود الهدف (income)
 """
 
 # استخراج جميع القواعد
@@ -159,34 +159,34 @@ rules = association_rules(
     min_threshold=MIN_CONFIDENCE
 )
 
-# تصفية: نريد فقط القواعد التي نتيجتها تتعلق بـ target
-rules_target = rules[
+# تصفية: نريد فقط القواعد التي نتيجتها تتعلق بـ income
+rules_income = rules[
     rules['consequents'].apply(
-        lambda x: any('target=' in item for item in x)
+        lambda x: any('income=' in item for item in x)
     )
 ].copy()
 
 # تصفية إضافية بناءً على Lift
-rules_target = rules_target[rules_target['lift'] >= MIN_LIFT]
+rules_income = rules_income[rules_income['lift'] >= MIN_LIFT]
 
 # ترتيب حسب الثقة ثم الرفع
-rules_target = rules_target.sort_values(
+rules_income = rules_income.sort_values(
     ['confidence', 'lift'], ascending=False
 ).reset_index(drop=True)
 
 # تحويل frozensets إلى نصوص مقروءة
-rules_target['antecedents_str'] = rules_target['antecedents'].apply(
+rules_income['antecedents_str'] = rules_income['antecedents'].apply(
     lambda x: " AND ".join(sorted(list(x)))
 )
-rules_target['consequents_str'] = rules_target['consequents'].apply(
+rules_income['consequents_str'] = rules_income['consequents'].apply(
     lambda x: " AND ".join(sorted(list(x)))
 )
 
 print("\n" + "=" * 60)
-print("قواعد الارتباط المرتبطة بالعمود الهدف (target)")
+print("قواعد الارتباط المرتبطة بالعمود الهدف (income)")
 print(f"(min_support={MIN_SUPPORT}, min_confidence={MIN_CONFIDENCE}, min_lift={MIN_LIFT})")
 print("=" * 60)
-print(f"عدد القواعد المستخرجة: {len(rules_target)}")
+print(f"عدد القواعد المستخرجة: {len(rules_income)}")
 
 # ============================================================
 # 8. عرض أهم النتائج | Display Top Results
@@ -195,22 +195,22 @@ print(f"عدد القواعد المستخرجة: {len(rules_target)}")
 display_cols = ['antecedents_str', 'consequents_str', 'support', 'confidence', 'lift']
 
 print("\n--- أعلى 15 قاعدة ارتباط ---")
-top_rules = rules_target[display_cols].head(15)
+top_rules = rules_income[display_cols].head(15)
 for i, row in top_rules.iterrows():
     print(f"\n[{i+1}] إذا: {row['antecedents_str']}")
     print(f"     إذن: {row['consequents_str']}")
     print(f"     الدعم={row['support']:.3f} | الثقة={row['confidence']:.3f} | الرفع={row['lift']:.3f}")
 
 # ============================================================
-# 9. تقسيم النتائج حسب الهدف | Split by Target
+# 9. تقسيم النتائج حسب الهدف | Split by income
 # ============================================================
 
-rules_high = rules_target[
-    rules_target['consequents_str'].str.contains('>50K')
+rules_high = rules_income[
+    rules_income['consequents_str'].str.contains('>50K')
 ].head(10)
 
-rules_low = rules_target[
-    rules_target['consequents_str'].str.contains('<=50K')
+rules_low = rules_income[
+    rules_income['consequents_str'].str.contains('<=50K')
 ].head(10)
 
 print("\n" + "=" * 60)
@@ -232,7 +232,7 @@ for i, row in rules_low.iterrows():
 # ============================================================
 # 10. حفظ النتائج | Save Results
 # ============================================================
-rules_target[display_cols].to_csv("apriori_rules_output.csv", index=False, encoding='utf-8-sig')
+rules_income[display_cols].to_csv("apriori_rules_output.csv", index=False, encoding='utf-8-sig')
 frequent_itemsets[['support', 'itemsets_str']].to_csv("frequent_itemsets_output.csv", index=False, encoding='utf-8-sig')
 
 print("\n" + "=" * 60)
@@ -245,7 +245,7 @@ print("=" * 60)
 # 11. ملخص الإحصائيات | Summary Statistics
 # ============================================================
 print("\n--- ملخص إحصائيات القواعد ---")
-print(f"متوسط الثقة:  {rules_target['confidence'].mean():.3f}")
-print(f"أعلى ثقة:    {rules_target['confidence'].max():.3f}")
-print(f"متوسط الرفع: {rules_target['lift'].mean():.3f}")
-print(f"أعلى رفع:    {rules_target['lift'].max():.3f}")
+print(f"متوسط الثقة:  {rules_income['confidence'].mean():.3f}")
+print(f"أعلى ثقة:    {rules_income['confidence'].max():.3f}")
+print(f"متوسط الرفع: {rules_income['lift'].mean():.3f}")
+print(f"أعلى رفع:    {rules_income['lift'].max():.3f}")
